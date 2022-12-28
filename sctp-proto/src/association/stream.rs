@@ -51,7 +51,7 @@ pub enum StreamEvent {
 }
 
 /// Reliability type for stream
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ReliabilityType {
     /// ReliabilityTypeReliable is used for reliable transmission
     Reliable = 0,
@@ -484,11 +484,7 @@ impl StreamState {
             buffered_amount_low,
         );
 
-        if from_amount > buffered_amount_low && new_amount <= buffered_amount_low {
-            true
-        } else {
-            false
-        }
+        from_amount > buffered_amount_low && new_amount <= buffered_amount_low
     }
 
     pub(crate) fn get_num_bytes_in_reassembly_queue(&self) -> usize {

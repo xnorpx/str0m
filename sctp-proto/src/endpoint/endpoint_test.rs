@@ -116,10 +116,7 @@ impl TestEndpoint {
 
         while self.inbound.front().map_or(false, |x| x.0 <= now) {
             let (recv_time, ecn, packet) = self.inbound.pop_front().unwrap();
-            if let Some((ch, event)) =
-                self.endpoint
-                    .handle(recv_time, remote, None, ecn, packet.into())
-            {
+            if let Some((ch, event)) = self.endpoint.handle(recv_time, remote, None, ecn, packet) {
                 match event {
                     DatagramEvent::NewAssociation(conn) => {
                         self.associations.insert(ch, conn);
@@ -410,7 +407,7 @@ fn establish_session_pair(
     {
         let s1 = pair.server_conn_mut(server_ch).accept_stream().unwrap();
         if si != s1.stream_identifier {
-            return Err(Error::Other("si should match".to_owned()).into());
+            return Err(Error::Other("si should match".to_owned()));
         }
     }
     pair.drive();
@@ -420,15 +417,15 @@ fn establish_session_pair(
     let n = chunks.read(&mut buf)?;
 
     if n != hello_msg.len() {
-        return Err(Error::Other("received data must by 3 bytes".to_owned()).into());
+        return Err(Error::Other("received data must by 3 bytes".to_owned()));
     }
 
     if chunks.ppi != PayloadProtocolIdentifier::Dcep {
-        return Err(Error::Other("unexpected ppi".to_owned()).into());
+        return Err(Error::Other("unexpected ppi".to_owned()));
     }
 
-    if &buf[..n] != &hello_msg {
-        return Err(Error::Other("received data mismatch".to_owned()).into());
+    if buf[..n] != hello_msg {
+        return Err(Error::Other("received data mismatch".to_owned()));
     }
     pair.drive();
 
@@ -520,9 +517,9 @@ fn test_assoc_reliable_ordered_reordered() -> Result<()> {
 
     let si: u16 = 2;
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -600,13 +597,13 @@ fn test_assoc_reliable_ordered_fragmented_then_defragmented() -> Result<()> {
 
     let si: u16 = 3;
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
     let mut sbufl = vec![0u8; 2000];
-    for i in 0..sbufl.len() {
+    (0..sbufl.len()).for_each(|i| {
         sbufl[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -662,13 +659,13 @@ fn test_assoc_reliable_unordered_fragmented_then_defragmented() -> Result<()> {
 
     let si: u16 = 4;
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
     let mut sbufl = vec![0u8; 2000];
-    for i in 0..sbufl.len() {
+    (0..sbufl.len()).for_each(|i| {
         sbufl[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -724,9 +721,9 @@ fn test_assoc_reliable_unordered_ordered() -> Result<()> {
 
     let si: u16 = 5;
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -934,9 +931,9 @@ fn test_assoc_unreliable_rexmit_ordered_no_fragment() -> Result<()> {
 
     let si: u16 = 1;
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -1009,9 +1006,9 @@ fn test_assoc_unreliable_rexmit_ordered_fragment() -> Result<()> {
 
     let si: u16 = 1;
     let mut sbuf = vec![0u8; 2000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -1088,9 +1085,9 @@ fn test_assoc_unreliable_rexmit_unordered_no_fragment() -> Result<()> {
 
     let si: u16 = 2;
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -1162,9 +1159,9 @@ fn test_assoc_unreliable_rexmit_unordered_fragment() -> Result<()> {
 
     let si: u16 = 1;
     let mut sbuf = vec![0u8; 2000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -1244,9 +1241,9 @@ fn test_assoc_unreliable_rexmit_timed_ordered() -> Result<()> {
 
     let si: u16 = 3;
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -1318,9 +1315,9 @@ fn test_assoc_unreliable_rexmit_timed_unordered() -> Result<()> {
 
     let si: u16 = 3;
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::NoDelay, 0)?;
 
@@ -1502,9 +1499,9 @@ fn test_assoc_congestion_control_congestion_avoidance() -> Result<()> {
     let n_packets_to_send: u32 = 2000;
 
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) =
         create_association_pair(AckMode::Normal, max_receive_buffer_size)?;
@@ -1630,9 +1627,9 @@ fn test_assoc_congestion_control_slow_reader() -> Result<()> {
     let n_packets_to_send: u32 = 130;
 
     let mut sbuf = vec![0u8; 1000];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) =
         create_association_pair(AckMode::Normal, max_receive_buffer_size)?;
@@ -1737,9 +1734,9 @@ fn test_assoc_delayed_ack() -> Result<()> {
     let si: u16 = 6;
     let mut sbuf = vec![0u8; 1000];
     let mut rbuf = vec![0u8; 1500];
-    for i in 0..sbuf.len() {
+    (0..sbuf.len()).for_each(|i| {
         sbuf[i] = (i & 0xff) as u8;
-    }
+    });
 
     let (mut pair, client_ch, server_ch) = create_association_pair(AckMode::AlwaysDelay, 0)?;
 

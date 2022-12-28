@@ -471,7 +471,7 @@ fn test_reassembly_queue_ordered_fragments() -> Result<()> {
         assert_eq!(chunks.ppi, org_ppi, "should have valid ppi");
         assert_eq!(&buf[..n], b"ABCDEFG", "data should match");
     } else {
-        assert!(false);
+        panic!();
     }
 
     Ok(())
@@ -533,7 +533,7 @@ fn test_reassembly_queue_unordered_fragments() -> Result<()> {
         assert_eq!(chunks.ppi, org_ppi, "should have valid ppi");
         assert_eq!(&buf[..n], b"ABCDEFGH", "data should match");
     } else {
-        assert!(false);
+        panic!();
     }
 
     Ok(())
@@ -586,7 +586,7 @@ fn test_reassembly_queue_ordered_and_unordered_fragments() -> Result<()> {
         assert_eq!(chunks.ppi, org_ppi, "should have valid ppi");
         assert_eq!(&buf[..n], b"DEF", "data should match");
     } else {
-        assert!(false);
+        panic!();
     }
 
     // Next should read ordered chunks
@@ -597,7 +597,7 @@ fn test_reassembly_queue_ordered_and_unordered_fragments() -> Result<()> {
         assert_eq!(chunks.ppi, org_ppi, "should have valid ppi");
         assert_eq!(&buf[..n], b"ABC", "data should match");
     } else {
-        assert!(false);
+        panic!();
     }
 
     Ok(())
@@ -666,7 +666,7 @@ fn test_reassembly_queue_unordered_complete_skips_incomplete() -> Result<()> {
         assert_eq!(chunks.ppi, org_ppi, "should have valid ppi");
         assert_eq!(&buf[..n], b"GOOD", "data should match");
     } else {
-        assert!(false);
+        panic!();
     }
 
     Ok(())
@@ -801,7 +801,7 @@ fn test_reassembly_queue_detect_buffer_too_short() -> Result<()> {
         }
         assert_eq!(0, rq.get_num_bytes(), "num bytes mismatch");
     } else {
-        assert!(false);
+        panic!();
     }
 
     Ok(())

@@ -6,7 +6,7 @@ use crate::StreamId;
 use bytes::{Bytes, BytesMut};
 use std::cmp::Ordering;
 
-fn sort_chunks_by_tsn(c: &mut Vec<ChunkPayloadData>) {
+fn sort_chunks_by_tsn(c: &mut [ChunkPayloadData]) {
     c.sort_by(|a, b| {
         if sna32lt(a.tsn, b.tsn) {
             Ordering::Less
@@ -16,7 +16,7 @@ fn sort_chunks_by_tsn(c: &mut Vec<ChunkPayloadData>) {
     });
 }
 
-fn sort_chunks_by_ssn(c: &mut Vec<Chunks>) {
+fn sort_chunks_by_ssn(c: &mut [Chunks]) {
     c.sort_by(|a, b| {
         if sna16lt(a.ssn, b.ssn) {
             Ordering::Less
@@ -27,7 +27,7 @@ fn sort_chunks_by_ssn(c: &mut Vec<Chunks>) {
 }
 
 /// A chunk of data from the stream
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Chunk {
     /// The contents of the chunk
     pub bytes: Bytes,
