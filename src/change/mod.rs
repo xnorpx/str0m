@@ -1,6 +1,6 @@
 //! Ways of changing the Rtc session
 
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use crate::io::Id;
 use crate::rtp::{ChannelId, Direction, Extensions, Mid, Ssrc};
@@ -15,6 +15,9 @@ pub(crate) struct Changes(pub Vec<Change>);
 
 mod sdp;
 pub use sdp::{SdpAnswer, SdpOffer, SdpPendingOffer, SdpStrategy};
+
+mod direct;
+pub use direct::DirectStrategy;
 
 /// Strategy for changing the [`Rtc`][crate::Rtc] session.
 ///
@@ -36,6 +39,7 @@ pub(crate) enum Change {
     AddApp(Mid),
     AddChannel(ChannelId, DcepOpen),
     Direction(Mid, Direction),
+    StartDtls(bool),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -177,7 +181,7 @@ impl<'a, Strategy: ChangeStrategy> ChangeSet<'a, Strategy> {
             index: 0,
         };
 
-        self.changes.0.push(Change::AddMedia(add));
+        self.changes.push(Change::AddMedia(add));
         mid
     }
 
@@ -201,7 +205,7 @@ impl<'a, Strategy: ChangeStrategy> ChangeSet<'a, Strategy> {
             return;
         }
 
-        self.changes.0.push(Change::Direction(mid, dir));
+        self.changes.push(Change::Direction(mid, dir));
     }
 
     /// Add a new data channel and get the `id` that will be used.
@@ -230,7 +234,7 @@ impl<'a, Strategy: ChangeStrategy> ChangeSet<'a, Strategy> {
 
         if !has_media {
             let mid = self.rtc.new_mid();
-            self.changes.0.push(Change::AddApp(mid));
+            self.changes.push(Change::AddApp(mid));
         }
 
         let id = self.rtc.new_sctp_channel();
@@ -244,7 +248,7 @@ impl<'a, Strategy: ChangeStrategy> ChangeSet<'a, Strategy> {
             protocol: String::new(),
         };
 
-        self.changes.0.push(Change::AddChannel(id, dcep));
+        self.changes.push(Change::AddChannel(id, dcep));
 
         id
     }
@@ -402,9 +406,15 @@ impl Change {
 }
 
 impl Deref for Changes {
-    type Target = [Change];
+    type Target = Vec<Change>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl DerefMut for Changes {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }

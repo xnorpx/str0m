@@ -216,6 +216,7 @@ fn requires_negotiation(c: &Change) -> bool {
         Change::AddApp(_) => true,
         Change::AddChannel(_, _) => false,
         Change::Direction(_, _) => true,
+        _ => panic!("Unexpected change for SdpStrategy: {:?}", c),
     }
 }
 
