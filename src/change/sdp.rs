@@ -91,21 +91,6 @@ impl SdpStrategy {
             rtc.ice.set_controlling(false);
         }
 
-        // If we receive an offer, we are not allowed to answer with actpass.
-        if rtc.setup == Setup::ActPass {
-            let remote_setup = offer.setup().unwrap_or(Setup::Active);
-            rtc.setup = if remote_setup == Setup::ActPass {
-                Setup::Passive
-            } else {
-                remote_setup.invert()
-            };
-            debug!(
-                "Change setup for answer: {} -> {}",
-                Setup::ActPass,
-                rtc.setup
-            );
-        }
-
         // Ensure setup=active/passive is corresponding remote and init dtls.
         init_dtls(rtc, &offer)?;
 
@@ -113,7 +98,8 @@ impl SdpStrategy {
         apply_offer(&mut rtc.session, offer)?;
 
         // Handle potentially new m=application line.
-        rtc.init_sctp();
+        let client = rtc.dtls.is_active().expect("DTLS active to be set");
+        rtc.init_sctp(client);
 
         let params = AsSdpParams::new(rtc, None);
         let sdp = as_sdp(&rtc.session, params);
@@ -194,7 +180,8 @@ impl SdpPendingOffer {
         apply_answer(&mut rtc.session, self.changes, answer)?;
 
         // Handle potentially new m=application line.
-        rtc.init_sctp();
+        let client = rtc.dtls.is_active().expect("DTLS to be inited");
+        rtc.init_sctp(client);
 
         for (id, dcep) in new_channels {
             rtc.sctp.open_stream(*id, dcep);
@@ -247,11 +234,21 @@ fn add_ice_details(rtc: &mut Rtc, sdp: &Sdp) -> Result<(), RtcError> {
 }
 
 fn init_dtls(rtc: &mut Rtc, remote_sdp: &Sdp) -> Result<(), RtcError> {
-    if let Some(remote_setup) = remote_sdp.setup() {
-        rtc.init_dtls(remote_setup)?;
-    } else {
-        warn!("Missing a=setup line");
-    }
+    let setup = match remote_sdp.setup() {
+        Some(v) => match v {
+            // Remote being ActPass, we take Passive role.
+            Setup::ActPass => Setup::Passive,
+            _ => v.invert(),
+        },
+
+        None => {
+            warn!("Missing a=setup line");
+            Setup::Passive
+        }
+    };
+
+    let active = setup == Setup::Active;
+    rtc.init_dtls(active)?;
 
     Ok(())
 }
@@ -723,7 +720,11 @@ impl<'a, 'b> AsSdpParams<'a, 'b> {
             candidates: rtc.ice.local_candidates(),
             creds: rtc.ice.local_credentials(),
             fingerprint: rtc.dtls.local_fingerprint(),
-            setup: rtc.setup,
+            setup: match rtc.dtls.is_active() {
+                Some(true) => Setup::Active,
+                Some(false) => Setup::Passive,
+                None => Setup::ActPass,
+            },
             pending,
         }
     }

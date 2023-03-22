@@ -493,7 +493,7 @@ use ice::IceAgentEvent;
 use io::DatagramRecv;
 use rtp::{InstantExt, Ssrc};
 use sctp::{RtcSctp, SctpEvent};
-use sdp::Setup;
+
 use stats::{MediaEgressStats, MediaIngressStats, PeerStats, Stats, StatsEvent};
 use thiserror::Error;
 
@@ -649,7 +649,6 @@ pub struct Rtc {
     alive: bool,
     ice: IceAgent,
     dtls: Dtls,
-    setup: Setup,
     sctp: RtcSctp,
     stats: Stats,
     session: Session,
@@ -800,7 +799,6 @@ impl Rtc {
             alive: true,
             ice,
             dtls: Dtls::new().expect("DTLS to init without problem"),
-            setup: Setup::ActPass,
             session: Session::new(config.codec_config, config.ice_lite, config.use_bwe),
             sctp: RtcSctp::new(),
             stats: Stats::new(config.stats_interval),
@@ -964,42 +962,36 @@ impl Rtc {
         }
     }
 
-    fn init_dtls(&mut self, remote_setup: Setup) -> Result<(), RtcError> {
-        self.setup = self.setup.compare_to_remote(remote_setup).ok_or_else(|| {
-            RtcError::RemoteSdp(format!(
-                "impossible setup {:?} != {:?}",
-                self.setup, remote_setup
-            ))
-        })?;
+    fn init_dtls(&mut self, active: bool) -> Result<(), RtcError> {
+        if self.dtls.is_inited() {
+            return Ok(());
+        }
 
-        if !self.dtls.is_inited() {
-            info!("DTLS setup is: {:?}", self.setup);
-            assert!(self.setup != Setup::ActPass);
+        info!("DTLS setup is: {:?}", active);
+        self.dtls.set_active(active);
 
-            let active = self.setup == Setup::Active;
-            self.dtls.set_active(active);
-            if active {
-                self.dtls.handle_handshake()?;
-            }
+        if active {
+            self.dtls.handle_handshake()?;
         }
 
         Ok(())
     }
 
-    fn init_sctp(&mut self) {
+    fn init_sctp(&mut self, client: bool) {
         // If we got an m=application line, ensure we have negotiated the
         // SCTP association with the other side.
-        if self.session.app().is_some() && !self.sctp.is_inited() {
-            self.sctp.init(self.setup == Setup::Active, self.last_now);
+        if self.session.app().is_none() || self.sctp.is_inited() {
+            return;
+        }
+        self.sctp.init(client, self.last_now);
 
-            for s in self
-                .sctp_allocations
-                .iter_mut()
-                .filter(|s| s.sctp_channel.is_none())
-            {
-                let c = self.sctp.next_sctp_channel();
-                s.sctp_channel = Some(c);
-            }
+        for s in self
+            .sctp_allocations
+            .iter_mut()
+            .filter(|s| s.sctp_channel.is_none())
+        {
+            let c = self.sctp.next_sctp_channel();
+            s.sctp_channel = Some(c);
         }
     }
 
@@ -1099,8 +1091,7 @@ impl Rtc {
                 }
                 DtlsEvent::SrtpKeyingMaterial(mat) => {
                     info!("DTLS set SRTP keying material");
-                    assert!(self.setup != Setup::ActPass);
-                    let active = self.setup == Setup::Active;
+                    let active = self.dtls.is_active().expect("DTLS must be inited by now");
                     self.session.set_keying_material(mat, active);
                 }
                 DtlsEvent::RemoteFingerprint(v1) => {

@@ -1,4 +1,3 @@
-use crate::sdp::Setup;
 use crate::Rtc;
 use crate::RtcError;
 
@@ -42,19 +41,8 @@ fn apply_changes(rtc: &mut Rtc, changes: super::Changes) -> Result<(), RtcError>
             Change::AddApp(_) => todo!(),
             Change::AddChannel(_, _) => todo!(),
             Change::Direction(_, _) => todo!(),
-            Change::StartDtls(active) => start_dtls(rtc, active)?,
+            Change::StartDtls(active) => rtc.init_dtls(active)?,
         }
     }
     Ok(())
-}
-
-fn start_dtls(rtc: &mut Rtc, active: bool) -> Result<(), RtcError> {
-    // TODO: Remove this SDP-ism. Need some work to remove Rtc::setup field.
-    let remote_setup = if active {
-        Setup::Passive
-    } else {
-        Setup::Active
-    };
-
-    rtc.init_dtls(remote_setup)
 }
