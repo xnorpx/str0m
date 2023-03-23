@@ -155,9 +155,9 @@ impl IceConnectionState {
 /// By matching IceCreds in STUN to SDP, we know which STUN belongs to which Peer.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IceCreds {
-    // From a=ice-ufrag
+    /// From a=ice-ufrag
     pub ufrag: String,
-    // From a=ice-pwd
+    /// From a=ice-pwd
     pub pass: String,
 }
 
@@ -211,6 +211,7 @@ pub enum IceAgentEvent {
 }
 
 impl IceCreds {
+    /// TODO
     pub fn new() -> Self {
         // Username Fragment and Password:  Values used to perform connectivity
         // checks.  The values MUST be unguessable, with at least 128 bits of

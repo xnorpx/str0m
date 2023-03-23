@@ -201,7 +201,7 @@ fn requires_negotiation(c: &Change) -> bool {
     match c {
         Change::AddMedia(_) => true,
         Change::AddApp(_) => true,
-        Change::AddChannel(_, _) => false,
+        Change::AddChannel(_, _, _) => false,
         Change::Direction(_, _) => true,
         _ => panic!("Unexpected change for SdpStrategy: {:?}", c),
     }

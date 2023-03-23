@@ -155,6 +155,17 @@ impl RtcSctp {
         }
     }
 
+    pub fn open_prenegotiated_stream(&mut self, id: u16, dcep: DcepOpen) {
+        let new_entry = StreamEntry {
+            id,
+            state: StreamEntryState::Open,
+            do_close: false,
+            dcep: Some(dcep),
+        };
+
+        self.entries.push(new_entry);
+    }
+
     pub fn open_stream(&mut self, id: u16, dcep: DcepOpen) {
         // New entries are added in state AwaitOpen, and the poll() function
         // will create the corresponding streams once the association is established.
@@ -382,7 +393,7 @@ impl RtcSctp {
                 Err(e) => {
                     // This is expected on browser refresh or similar abrubt shutdown.
                     debug!("Getting stream {} failed: {:?}", entry.id, e);
-                    entry.do_close = true;
+                    //entry.do_close = true;
                     continue;
                 }
             };

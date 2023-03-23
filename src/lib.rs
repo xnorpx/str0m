@@ -498,6 +498,7 @@ use stats::{MediaEgressStats, MediaIngressStats, PeerStats, Stats, StatsEvent};
 use thiserror::Error;
 
 pub use ice::IceConnectionState;
+pub use ice::IceCreds;
 
 pub use ice::Candidate;
 pub use rtp::Bitrate;

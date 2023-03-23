@@ -48,6 +48,38 @@ pub struct Fingerprint {
     pub bytes: Vec<u8>,
 }
 
+impl ToString for Fingerprint {
+    /// Convert to the hex string you find in SDP
+    fn to_string(&self) -> String {
+        format!(
+            "{} {}",
+            self.hash_func,
+            self.bytes
+                .iter()
+                .map(|b| format!("{:02X}", b))
+                .collect::<Vec<_>>()
+                .join(":")
+        )
+    }
+}
+
+impl std::str::FromStr for Fingerprint {
+    type Err = ();
+
+    fn from_str(hex_string: &str) -> Result<Self, Self::Err> {
+        let (hash_func, hex_with_colons) = hex_string.split_once(' ').ok_or(())?;
+        // TODO: fail if any char fails instead of skipping
+        let bytes: Vec<u8> = hex_with_colons
+            .split(':')
+            .filter_map(|hex| u8::from_str_radix(hex, 16).ok())
+            .collect();
+        Ok(Self {
+            hash_func: hash_func.to_owned(),
+            bytes,
+        })
+    }
+}
+
 /// Encapsulation of DTLS.
 pub struct Dtls {
     /// Context belongs together with Fingerprint.

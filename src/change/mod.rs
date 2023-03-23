@@ -37,10 +37,13 @@ pub struct ChangesWrapper(Changes);
 pub(crate) enum Change {
     AddMedia(AddMedia),
     AddApp(Mid),
-    AddChannel(ChannelId, DcepOpen),
+    AddChannel(ChannelId, DcepOpen, Prenegotiated),
     Direction(Mid, Direction),
     StartDtls(bool),
 }
+
+#[doc(hidden)]
+pub type Prenegotiated = bool;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct AddMedia {
@@ -248,7 +251,7 @@ impl<'a, Strategy: ChangeStrategy> ChangeSet<'a, Strategy> {
             protocol: String::new(),
         };
 
-        self.changes.push(Change::AddChannel(id, dcep));
+        self.changes.push(Change::AddChannel(id, dcep, false));
 
         id
     }
@@ -292,8 +295,8 @@ impl Changes {
         }
 
         for i in (0..self.0.len()).rev() {
-            if matches!(&self.0[i], Change::AddChannel(_, _)) {
-                if let Change::AddChannel(id, dcep) = self.0.remove(i) {
+            if matches!(&self.0[i], Change::AddChannel(_, _, _)) {
+                if let Change::AddChannel(id, dcep, false) = self.0.remove(i) {
                     v.push((id, dcep));
                 }
             }
