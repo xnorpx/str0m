@@ -228,11 +228,11 @@ impl RtcSctp {
         Ok(stream.write_with_ppi(buf, ppi)?)
     }
 
-    pub fn handle_input(&mut self, now: Instant, data: &[u8]) {
+    pub fn handle_input(&mut self, now: Instant, data: Vec<u8>) {
         trace!("Handle input: {}", data.len());
 
         // TODO, remove Bytes in sctp and just use &[u8].
-        let data = data.to_vec().into();
+        let data = data.into();
         let r = self.endpoint.handle(now, self.fake_addr, None, None, data);
 
         let Some((handle, event)) = r else {

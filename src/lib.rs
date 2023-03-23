@@ -1108,7 +1108,7 @@ impl Rtc {
                     }
                 }
                 DtlsEvent::Data(v) => {
-                    self.sctp.handle_input(self.last_now, &v);
+                    self.sctp.handle_input(self.last_now, v);
                 }
             }
         }
